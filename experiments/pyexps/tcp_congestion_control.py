@@ -36,18 +36,19 @@ from simbricks.orchestration.simulator_utils import create_tcp_cong_hosts
 types_of_host = ['gt']
 #types_of_nic = ['cv', 'cb', 'ib']
 types_of_nic = ['ib']
-types_of_net = ['dumbbell']
-types_of_app = ['DCTCPm']
+#types_of_net = ['dumbbell']
+#types_of_app = ['DCTCPm']
 #types_of_mtu = [1500, 4000, 9000]
-types_of_mtu = [4000]
-types_of_congestion_control = ['bic']
+types_of_mtu = [1500]
+types_of_congestion_control = ['cubic']
 
 num_pairs = 2
-max_k = 199680
+#max_k = 199680
 #k_step = 16640
-k_step = 33280
-link_rate_opt = '--LinkRate=10Gb/s '  # don't forget space at the end
-link_latency_opt = '--LinkLatency=500ns '
+#k_step = 33280
+link_rate_opt = '--LinkRate=200Mb/s'
+link_latency_opt = '--LinkLatency=10ms'
+bdp = 40000000 # Bandwidth-delay product in bytes
 cpu_freq = '5GHz'
 cpu_freq_qemu = '2GHz'
 sys_clock = '1GHz'  # if not set, default 1GHz
@@ -63,10 +64,12 @@ for congestion_control in types_of_congestion_control:
     for mtu in types_of_mtu:
         for host in types_of_host:
             for nic in types_of_nic:
-                for k_val in range(0, max_k + 1, k_step):
+                for k_val in range(0, 1 + 1):
+
+                    queue_size = int(bdp * 2**k_val)
 
                     net = NetClass()
-                    net.opt = link_rate_opt + link_latency_opt + f'--EcnTh={k_val}'
+                    net.opt = ' '.join([link_rate_opt, link_latency_opt, f'--QueueSize={queue_size}B'])
 
                     e = exp.Experiment(
                         host + '-' + nic + '-' + 'dumbbell' + '-' + congestion_control + 'TCPm' +
