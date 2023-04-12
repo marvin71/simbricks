@@ -342,16 +342,16 @@ class I40eTCPCongNode(NodeConfig):
         return super().prepare_pre_cp() + [
             'mount -t proc proc /proc',
             'mount -t sysfs sysfs /sys',
-            'sysctl -w net.core.rmem_default=31457280',
-            'sysctl -w net.core.rmem_max=31457280',
-            'sysctl -w net.core.wmem_default=31457280',
-            'sysctl -w net.core.wmem_max=31457280',
-            'sysctl -w net.core.optmem_max=25165824',
-            'sysctl -w net.ipv4.tcp_mem="786432 1048576 26777216"',
-            'sysctl -w net.ipv4.tcp_rmem="8192 87380 33554432"',
-            'sysctl -w net.ipv4.tcp_wmem="8192 87380 33554432"',
+            # 'sysctl -w net.core.rmem_default=31457280',
+            # 'sysctl -w net.core.rmem_max=31457280',
+            # 'sysctl -w net.core.wmem_default=31457280',
+            # 'sysctl -w net.core.wmem_max=31457280',
+            # 'sysctl -w net.core.optmem_max=25165824',
+            # 'sysctl -w net.ipv4.tcp_mem="786432 1048576 26777216"',
+            # 'sysctl -w net.ipv4.tcp_rmem="8192 87380 33554432"',
+            # 'sysctl -w net.ipv4.tcp_wmem="8192 87380 33554432"',
             f'sysctl -w net.ipv4.tcp_congestion_control={self.tcp_congestion_control}',
-            'sysctl -w net.ipv4.tcp_ecn=1'
+            'sysctl -w net.ipv4.tcp_ecn=0'
         ]
 
     def prepare_post_cp(self):
@@ -359,7 +359,7 @@ class I40eTCPCongNode(NodeConfig):
             'modprobe i40e',
             'ethtool -G eth0 rx 4096 tx 4096',
             'ethtool -K eth0 tso off',
-            'ip link set eth0 txqueuelen 13888',
+            # 'ip link set eth0 txqueuelen 13888',
             f'ip link set dev eth0 mtu {self.mtu} up',
             f'ip addr add {self.ip}/{self.prefix} dev eth0',
         ]
