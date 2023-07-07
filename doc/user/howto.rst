@@ -156,11 +156,11 @@ below of adding a class for the ``NS3`` network simulator.
     def run_cmd(self, env):
         ports = ''
         for (_, n) in self.connect_sockets(env):
-            ports += '--CosimPort=' + n + ' '
+            ports += '--SimbricksPort=' + n + ' '
 
         cmd = (
             f'{env.repodir}/sims/external/ns-3'
-            f'/cosim-run.sh cosim cosim-bridge-example {ports} {self.opt}'
+            f'/simbricks-run.sh simbricks-bridge-example {ports} {self.opt}'
         )
         print(cmd)
 
