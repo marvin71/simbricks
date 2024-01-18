@@ -105,6 +105,10 @@ class E2EBase(ABC):
     def add_component(self, component: E2EComponent) -> None:
         pass
 
+    @abstractmethod
+    def resolve_paths(self) -> None:
+        pass
+
 
 class E2EGlobalConfig(E2EBase):
 
@@ -120,6 +124,9 @@ class E2EGlobalConfig(E2EBase):
     def add_component(self, component: E2EComponent) -> None:
         print("Can't add a component to the global config")
         sys.exit(1)
+
+    def resolve_paths(self) -> None:
+        pass
 
 
 class E2EComponent(E2EBase):

@@ -896,7 +896,8 @@ class NS3E2ENet(NetSim):
         super().__init__()
         self.first_run = True
         self.e2e_components: tp.List[tp.Union[e2e.E2ETopologyNode,
-                                              e2e.E2ETopologyChannel]] = []
+                                              e2e.E2ETopologyChannel,
+                                              e2e.E2EGlobalConfig]] = []
         self.e2e_topologies: tp.List[E2ETopology] = []
         self.use_file = True
 
@@ -904,6 +905,7 @@ class NS3E2ENet(NetSim):
         self,
         component: tp.Union[e2e.E2ETopologyNode,
                             e2e.E2ETopologyChannel,
+                            e2e.E2EGlobalConfig,
                             E2ETopology]
     ):
         if isinstance(component, E2ETopology):
