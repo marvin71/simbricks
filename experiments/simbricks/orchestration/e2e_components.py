@@ -219,6 +219,7 @@ class E2ESimbricksNetwork(E2EComponent):
         self.sync_delay = ""
         self.poll_delay = ""
         self.eth_latency = ""
+        self.shm_path = ""
         self.peer = None
         self.sync: SimbricksSyncMode = SimbricksSyncMode.SYNC_OPTIONAL
 
@@ -235,6 +236,7 @@ class E2ESimbricksNetwork(E2EComponent):
             "PollDelay": self.poll_delay,
             "EthLatency": self.eth_latency,
             "Sync": "" if self.sync is None else f"{self.sync.value}",
+            "ShmPath": self.shm_path
         })
         return super().ns3_config()
 
@@ -251,6 +253,45 @@ class E2ESimbricksNetworkNicIf(E2ESimbricksNetwork):
     def __init__(self, idd: str) -> None:
         super().__init__(idd)
         self.type = "NicIf"
+
+
+class E2ESimbricksNetworkTrunk(E2ESimbricksNetwork):
+
+    def __init__(self, idd: str) -> None:
+        super().__init__(idd)
+        self.type = "Trunk"
+        self.listen: tp.Optional[bool] = None
+
+    def ns3_config(self) -> str:
+        if self.listen is None:
+            listen = ""
+        elif self.listen:
+            listen = "true"
+        else:
+            listen = "false"
+        self.mapping.update({"Listen": listen})
+        return super().ns3_config()
+
+
+class E2ESimbricksNetworkTrunkDevice(E2EComponent):
+
+    def __init__(self, idd: str) -> None:
+        super().__init__(idd)
+        self.category = "Network"
+        self.type = "TrunkDevice"
+        self.order_id: tp.Optional[int] = None
+        self.trunk: tp.Optional[E2ESimbricksNetworkTrunk] = None
+
+    def ns3_config(self) -> str:
+        if self.trunk is None:
+            raise AttributeError(f"Trunk device {self.id} has no trunk")
+        if self.order_id is None:
+            raise AttributeError(f"Trunk device {self.id} has no order id")
+        self.mapping.update({
+            "OrderId": str(self.order_id),
+            "Trunk": self.trunk.id,
+        })
+        return super().ns3_config()
 
 
 class E2EHost(E2EComponent):

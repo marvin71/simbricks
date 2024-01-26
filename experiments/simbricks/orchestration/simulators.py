@@ -979,6 +979,15 @@ class NS3E2ENet(NetSim):
                         p_suf = min(c.name, c.peer.name)
                     self.connect_network(c.simbricks_component, p_suf)
 
+            # add trunk links
+            if isinstance(
+                component, e2e.E2ESimbricksNetworkTrunk
+            ) and not component.listen:
+                p_suf = ''
+                if component.peer:
+                    p_suf = min(component.name, component.peer.name)
+                self.connect_network(component.simbricks_component, p_suf)
+
     def run_cmd(self, env):
         # resolve all socket paths
         for component in self.e2e_components:
@@ -989,6 +998,8 @@ class NS3E2ENet(NetSim):
                     self.resolve_socket_paths(env, c)
                 elif isinstance(c, e2e.E2ESimbricksNetworkNicIf):
                     self.resolve_socket_paths(env, c, True)
+            if isinstance(component, e2e.E2ESimbricksNetworkTrunk):
+                self.resolve_socket_paths(env, component, component.listen)
 
         params: tp.List[str] = []
         params.append(self.e2e_global.ns3_config())
