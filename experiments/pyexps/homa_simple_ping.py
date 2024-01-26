@@ -99,10 +99,5 @@ for p in protocol:
             client_nic.set_network(network)
             server_nic.set_network(network)
 
-            # set more interesting link latencies than default
-            eth_latency = 500  # 500 us
-            network.eth_latency = eth_latency
-            client_nic.eth_latency = eth_latency
-            server_nic.eth_latency = eth_latency
 
             experiments.append(e)
