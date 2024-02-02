@@ -909,6 +909,7 @@ class NS3E2ENet(NetSim):
         self.e2e_topologies: tp.List[E2ETopology] = []
         self.e2e_global = e2e.E2EGlobalConfig()
         self.use_file = True
+        self.use_dce = False
 
     def add_component(
         self,
@@ -987,19 +988,20 @@ class NS3E2ENet(NetSim):
 
         params_str = f'{" ".join(params)} {self.opt}'
 
+        if self.use_dce:
+            ns3_bin = '{}/../ns-3-dce/waf --run "dce-e2e-cc {}"'
+            if not self.use_file:
+                params_str.replace('"', '\\"')
+        else:
+            ns3_bin = '{}/sims/external/ns-3/simbricks-run.sh e2e-cc-example {}'
+
         if self.use_file:
             file_path = env.ns3_e2e_params_file(self)
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(params_str)
-            cmd = (
-                f'{env.repodir}/sims/external/ns-3'
-                f'/simbricks-run.sh e2e-cc-example --ConfigFile={file_path}'
-            )
+            cmd = ns3_bin.format(env.repodir, f'--ConfigFile={file_path}')
         else:
-            cmd = (
-                f'{env.repodir}/sims/external/ns-3'
-                f'/simbricks-run.sh e2e-cc-example {params_str}'
-            )
+            cmd = ns3_bin.format(env.repodir, params_str)
         print(cmd)
 
         return cmd

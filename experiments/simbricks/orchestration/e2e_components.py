@@ -478,6 +478,30 @@ class E2EOnOffApplication(E2EApplication):
         return super().ns3_config()
 
 
+class E2EDceApplication(E2EApplication):
+
+    def __init__(self, idd: str) -> None:
+        super().__init__(idd)
+        self.category = "DceApp"
+        # the type is actually not needed for this application
+        self.type = "Dce"
+        self.binary = ""
+        self.stack_size = ""
+        self.arguments = ""
+        self.environment = ""
+        self.stdin_file = ""
+
+    def ns3_config(self) -> str:
+        self.mapping.update({
+            "Binary": self.binary,
+            "StackSize": self.stack_size,
+            "Arguments": self.arguments,
+            "Environment": self.environment,
+            "StdinFile": self.stdin_file,
+        })
+        return super().ns3_config()
+
+
 class E2EProbe(E2EComponent):
 
     def __init__(self, idd: str) -> None:
