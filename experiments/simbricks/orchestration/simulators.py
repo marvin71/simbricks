@@ -972,6 +972,9 @@ class NS3E2ENet(NetSim):
 
     def run_cmd(self, env):
         # resolve all socket paths
+        old_env = env
+        if self.use_dce:
+            env = ExpEnv(env.repodir, '/out', env.cpdir)
         for component in self.e2e_components:
             for c in component.components:
                 if isinstance(c, e2e.E2ESimbricksHost):
@@ -980,6 +983,7 @@ class NS3E2ENet(NetSim):
                     self.resolve_socket_paths(env, c)
                 elif isinstance(c, e2e.E2ESimbricksNetworkNicIf):
                     self.resolve_socket_paths(env, c, True)
+        env = old_env
 
         params: tp.List[str] = []
         params.append(self.e2e_global.ns3_config())
@@ -989,7 +993,7 @@ class NS3E2ENet(NetSim):
         params_str = f'{" ".join(params)} {self.opt}'
 
         if self.use_dce:
-            ns3_bin = '{}/../ns-3-dce/waf --run "dce-e2e-cc {}"'
+            ns3_bin = f'{{}}/ns-3-dce.sh /srv/chroot/minimal {env.workdir} {{}}'
             if not self.use_file:
                 params_str.replace('"', '\\"')
         else:
