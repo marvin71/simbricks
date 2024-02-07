@@ -973,8 +973,9 @@ class NS3E2ENet(NetSim):
     def run_cmd(self, env):
         # resolve all socket paths
         old_env = env
+        dce_env = ExpEnv(env.repodir, '/out', env.cpdir)
         if self.use_dce:
-            env = ExpEnv(env.repodir, '/out', env.cpdir)
+            env = dce_env
         for component in self.e2e_components:
             for c in component.components:
                 if isinstance(c, e2e.E2ESimbricksHost):
@@ -983,7 +984,8 @@ class NS3E2ENet(NetSim):
                     self.resolve_socket_paths(env, c)
                 elif isinstance(c, e2e.E2ESimbricksNetworkNicIf):
                     self.resolve_socket_paths(env, c, True)
-        env = old_env
+        if self.use_dce:
+            env = old_env
 
         params: tp.List[str] = []
         params.append(self.e2e_global.ns3_config())
@@ -994,8 +996,6 @@ class NS3E2ENet(NetSim):
 
         if self.use_dce:
             ns3_bin = f'{{}}/ns-3-dce.sh /srv/chroot/minimal {env.workdir} {{}}'
-            if not self.use_file:
-                params_str.replace('"', '\\"')
         else:
             ns3_bin = '{}/sims/external/ns-3/simbricks-run.sh e2e-cc-example {}'
 
@@ -1003,6 +1003,8 @@ class NS3E2ENet(NetSim):
             file_path = env.ns3_e2e_params_file(self)
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(params_str)
+            if self.use_dce:
+                file_path = dce_env.ns3_e2e_params_file(self)
             cmd = ns3_bin.format(env.repodir, f'--ConfigFile={file_path}')
         else:
             cmd = ns3_bin.format(env.repodir, params_str)

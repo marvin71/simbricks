@@ -68,6 +68,7 @@ host.ip = '192.168.64.1/24'
 host.queue_size = f'{queue_size}B'
 host.congestion_control = congestion_control
 app = e2e.E2EDceApplication('iperf-client')
+app.start_time = '2s'
 app.stop_time = '20s'
 app.binary = 'iperf'
 app.arguments = '-c 192.168.64.2 -i 1'
@@ -88,7 +89,7 @@ def gem5_timing(node_config: node.NodeConfig):
     return h
 
 HostClass = gem5_timing
-e.checkpoint = True
+e.checkpoint = False
 
 NicClass = sim.I40eNIC
 NcClass = node.I40eTCPCongNode
@@ -111,7 +112,7 @@ servers = create_tcp_cong_hosts(
 for i, server in enumerate(servers, 1):
     host = e2e.E2ESimbricksHost(f'simbricksserver-{i}')
     host.eth_latency = '1us'
-    host.simbricks_host = server.nics[0]
+    host.simbricks_component = server.nics[0]
     topology.add_right_component(host)
 
 net.init_network()
