@@ -1007,9 +1007,13 @@ class NS3E2ENet(NetSim):
         params_str = f'{" ".join(params)} {self.opt}'
 
         if self.use_dce:
-            ns3_bin = f'{{}}/ns-3-dce.sh /srv/chroot/minimal {env.workdir} {{}}'
+            ns3_dce_dir = f'{env.repodir}/sims/external/ns-3-dce'
+            dce_script = f'{ns3_dce_dir}/scripts/ns-3-dce.sh'
+            dce_dir = f'{ns3_dce_dir}/dce-env'
+            ns3_bin = f'sudo {dce_script} {dce_dir} {env.workdir} {{}}'
         else:
-            ns3_bin = '{}/sims/external/ns-3/simbricks-run.sh e2e-cc-example {}'
+            ns3_dir = f'{env.repodir}/sims/external/ns-3'
+            ns3_bin = f'{ns3_dir}/simbricks-run.sh e2e-cc-example {{}}'
 
         if self.use_file:
             file_path = env.ns3_e2e_params_file(self)
@@ -1017,9 +1021,9 @@ class NS3E2ENet(NetSim):
                 f.write(params_str)
             if self.use_dce:
                 file_path = dce_env.ns3_e2e_params_file(self)
-            cmd = ns3_bin.format(env.repodir, f'--ConfigFile={file_path}')
+            cmd = ns3_bin.format(f'--ConfigFile={file_path}')
         else:
-            cmd = ns3_bin.format(env.repodir, params_str)
+            cmd = ns3_bin.format(params_str)
         print(cmd)
 
         return cmd
