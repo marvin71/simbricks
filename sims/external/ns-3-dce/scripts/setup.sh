@@ -48,8 +48,10 @@ rm -rf /var/cache/apt/*
 # create non-root user simbricks
 groupadd --gid $groupid simbricks
 useradd --uid $userid --gid $groupid -m simbricks --shell /bin/bash
-mkdir workspace
-chown simbricks:simbricks workspace
+mkdir /workspace
+chown simbricks:simbricks /workspace
+mkdir /out
+chown simbricks:simbricks /out
 
 #run the following with user simbricks
 su simbricks << "EOF"
