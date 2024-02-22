@@ -19,28 +19,31 @@ apt-get update \
     TZ=Europe/Berlin \
     apt-get install -y \
     bison \
-    ccache \
-	cmake \
-	g++ \
+    cmake \
+    g++ \
     gawk \
     gcc \
-	git \
+    git \
     libc6-dev \
     libboost-coroutine-dev \
     libboost-fiber-dev \
     libboost-iostreams-dev \
     libpcap-dev \
     make \
-	ninja-build \
+    ninja-build \
     pkgconf \
-	python-is-python3 \
-	python3 \
+    python-is-python3 \
+    python3 \
     python3-pip \
     rsync \
-	unzip \
-	wget \
+    unzip \
+    wget \
 
 pip3 install requests distro
+
+# clean apt lists and cache
+rm -rf /var/lib/apt/lists/*
+rm -rf /var/cache/apt/*
 
 # create non-root user simbricks
 groupadd --gid $groupid simbricks
