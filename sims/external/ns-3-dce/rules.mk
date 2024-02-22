@@ -25,12 +25,18 @@ include mk/subdir_pre.mk
 DCE_DIR := $(d)
 
 BUILD_SCRIPT := $(DCE_DIR)scripts/build-dce.sh
+CLEAN_SCRIPT := $(DCE_DIR)scripts/clean-dce.sh
 SETUP_SCRIPT := $(DCE_DIR)scripts/setup.sh
 RUN_SCRIPT := $(DCE_DIR)scripts/run_dce.sh
+
+.PHONY: ns-3-dce-clean
+
+ns-3-dce-clean:
+	$(CLEAN_SCRIPT) $(DCE_DIR)
 
 $(d)ready:
 	$(BUILD_SCRIPT) $(DCE_DIR) $(SETUP_SCRIPT) $(RUN_SCRIPT)
 	touch $@
 
-DISTCLEAN := $(d)dce-env ready
+EXTERNAL_CLEAN_TASKS := ns-3-dce-clean
 include mk/subdir_post.mk
