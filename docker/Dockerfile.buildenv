@@ -11,6 +11,7 @@ RUN apt-get update \
 	bison \
 	build-essential \
 	cmake \
+	debootstrap \
 	doxygen \
 	g++ \
 	flex \
