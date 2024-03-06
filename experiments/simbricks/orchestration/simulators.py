@@ -919,6 +919,7 @@ class NS3E2ENet(NetSim):
                                               e2e.E2ETopologyChannel]] = []
         self.e2e_topologies: tp.List[E2ETopology] = []
         self.e2e_global = e2e.E2EGlobalConfig()
+        self.e2e_ns3_logging = e2e.E2ENs3Logging()
         self.use_file = True
         self.use_dce = False
 
@@ -1003,6 +1004,7 @@ class NS3E2ENet(NetSim):
 
         params: tp.List[str] = []
         params.append(self.e2e_global.ns3_config())
+        params.append(self.e2e_ns3_logging.ns3_config())
         for component in self.e2e_components:
             params.append(component.ns3_config())
 
