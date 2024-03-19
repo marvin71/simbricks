@@ -8,4 +8,4 @@ do
 	cmd="$cmd \"$var\""
 done
 
-python3 waf --run "$cmd"
+python3 waf --cwd "/out" --run "$cmd"
