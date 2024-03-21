@@ -382,3 +382,122 @@ def add_homa_bg(topo, subnet='10.2.0.0/16', **kwargs):
             s_app.add_component(s_probe)
 
         topo.add_host_r(s_host)
+
+
+class HomaTopology(E2ETopology):
+
+    def __init__(self, basename='', **kwargs):
+        self.params = {
+            'n_agg_sw': 1,
+            'n_agg_racks': 9,
+            'h_per_rack': 16,
+            'mtu': '1448',
+            'agg_link_delay': '250ns',
+            'agg_link_rate': '160Gbps',
+            'agg_link_queue_type': 'ns3::HomaPFifoQueue',
+            'agg_link_queue_size': '500p',
+            'tor_link_delay': '250ns',
+            'tor_link_rate': '10Gbps',
+            'tor_link_queue_type': 'ns3::DropTailQueue<Packet>',
+            'tor_link_queue_size': '1p',
+            'pfifo_num_bands': '8',
+            'network_load': '0.8',
+            'start_time': '3s',
+            'stop_time': '23s',
+            'msg_size_dist_file': '',
+        }
+        for (n, v) in kwargs.items():
+            self.params[n] = v
+
+        self.basename = basename
+
+        self.switches = []
+        self.agg_switches = []
+        self.tor_switches = []
+
+        self.links = []
+        self.agg_tor_links = []
+
+        self.hosts = []
+
+        bn = basename
+
+        # create aggregation switches
+        for i in range(self.params['n_agg_sw']):
+            sw = e2e.E2ESwitchNode(f'_{bn}agg{i}')
+            sw.mtu = self.params['mtu']
+            self.agg_switches.append(sw)
+            self.switches.append(sw)
+
+        # create tor switches
+        for i in range(self.params['n_agg_racks']):
+            sw = e2e.E2ESwitchNode(f'_{bn}tor{i}')
+            sw.mtu = self.params['mtu']
+            self.tor_switches.append(sw)
+            self.switches.append(sw)
+
+        # connect tor switches to aggregation switches
+        for (i, agg_sw) in enumerate(self.agg_switches):
+            for (j, tor_sw) in enumerate(self.tor_switches):
+                l = e2e.E2ESimpleChannel(f'_{bn}link_agg{i}_tor{j}')
+                l.left_node = tor_sw
+                l.right_node = agg_sw
+                l.delay = self.params['agg_link_delay']
+                l.data_rate = self.params['agg_link_rate']
+                l.queue_type = self.params['agg_link_queue_type']
+                l.queue_size = self.params['agg_link_queue_size']
+                l.mtu = self.params['mtu']
+                self.links.append(l)
+                self.agg_tor_links.append(l)
+
+    def add_to_network(self, net):
+        for switch in self.switches:
+            net.add_component(switch)
+        for link in self.links:
+            net.add_component(link)
+
+    def get_links(self):
+        return self.links
+
+    def get_switches(self):
+        return self.switches
+
+    def add_homa_hosts(self, subnet='10.2.0.0/16'):
+        ipn = ipaddress.ip_network(subnet)
+        prefix = f'/{ipn.prefixlen}'
+        ips = ipn.hosts()
+
+        for (i, tor_sw) in enumerate(self.tor_switches):
+            for j in range(self.params['h_per_rack']):
+                host = e2e.E2ESimpleNs3Host(f'_{self.basename}tor{i}_host{j}')
+                host.delay = self.params['tor_link_delay']
+                host.data_rate = self.params['tor_link_rate']
+                host.ip = str(next(ips)) + prefix
+                host.mapping.update({
+                    'OuterQueueType': 'ns3::HomaPFifoQueue',
+                    'OuterQueue-MaxSize': '500p',
+                    'OuterQueue-NumBands': self.params['pfifo_num_bands'],
+                    'InnerQueueType': self.params['tor_link_queue_type'],
+                    'InnerQueue-MaxSize': self.params['tor_link_queue_size']
+                })
+                host.queue_type = ''
+                host.mtu = self.params['mtu']
+                self.hosts.append(host)
+                tor_sw.add_component(host)
+
+    def add_homa_app(self):
+        addresses = []
+        for (i, host) in enumerate(self.hosts):
+            addresses.append(host.ip.split('/')[0] + f':{2000+i}')
+        for (i, host) in enumerate(self.hosts):
+            app = e2e.E2EMsgGenApplication(f'_{self.basename}host{i}_homa_app')
+            app.ip = addresses[i].split(':')[0]
+            app.port = addresses[i].split(':')[1]
+            app.remotes = addresses
+            app.load = self.params['load']
+            app.start_time = self.params['start_time']
+            app.stop_time = self.params['stop_time']
+            # todo set correct size
+            app.payload_size = str(int(self.params['mtu']) - 20 - 20)
+            app.msg_size_dist_file = self.params['msg_size_dist_file']
+            host.add_component(app)

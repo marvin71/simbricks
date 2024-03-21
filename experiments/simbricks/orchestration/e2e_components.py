@@ -241,6 +241,7 @@ class E2ESimpleChannel(E2ETopologyChannel):
         self.queue_size = ""
         self.channel_type = "ns3::SimpleChannel"
         self.delay = ""
+        self.mtu = ""
         self.left_node: E2ETopologyNode
         self.right_node: E2ETopologyNode
 
@@ -249,6 +250,7 @@ class E2ESimpleChannel(E2ETopologyChannel):
             raise AttributeError(f"Not all nodes for channel {self.id} given")
         self.mapping.update({
             "Device-DataRate": self.data_rate,
+            "Device-Mtu": self.mtu,
             "QueueType": self.queue_type,
             "Queue-MaxSize": self.queue_size,
             "ChannelType": self.channel_type,
@@ -363,6 +365,7 @@ class E2ESimpleNs3Host(E2EHost):
         self.delay = ""
         self.congestion_control: CongestionControl = None
         self.ip = ""
+        self.mtu = ""
 
     def ns3_config(self) -> str:
         if self.congestion_control is None:
@@ -371,6 +374,7 @@ class E2ESimpleNs3Host(E2EHost):
             cc = self.congestion_control.ns3
         self.mapping.update({
             "Device-DataRate": self.data_rate,
+            "Device-Mtu": self.mtu,
             "QueueType": self.queue_type,
             "Queue-MaxSize": self.queue_size,
             "ChannelType": self.channel_type,
@@ -449,24 +453,28 @@ class E2EMsgGenApplication(E2EApplication):
         super().__init__(idd)
         self.type = "MsgGenerator"
         self.port = 3000
+        self.ip = "0.0.0.0"
         self.remotes = []
         self.cdf = {0.5: 1, 1.0: 2}
         self.max_msg = 0
         self.load = 0.8
         self.avg_msg_size_pkts = 1.0
+        self.payload_size = "1400"
+        self.msg_size_dist_file = ""
 
     def ns3_config(self) -> str:
         els = [f'{{{p},{i}}}' for p,i in self.cdf.items()]
         cdf = '+'.join(els)
         print(cdf)
         self.mapping.update({
-            "Port": self.port,
+            "Local": f"{self.ip}:{self.port}",
             "RemoteClients": ','.join(self.remotes),
             "MsgSizeCDF": cdf,
             "MaxMsg": self.max_msg,
             "Load": self.load,
             "AvgMsgSizePkts": self.avg_msg_size_pkts,
-
+            "PayloadSize": self.payload_size,
+            "MsgSizeDistFileName": self.msg_size_dist_file,
         })
         return super().ns3_config()
 
