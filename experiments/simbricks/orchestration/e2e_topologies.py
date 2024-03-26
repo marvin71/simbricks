@@ -494,7 +494,7 @@ class HomaTopology(E2ETopology):
             app.ip = addresses[i].split(':')[0]
             app.port = addresses[i].split(':')[1]
             app.remotes = addresses
-            app.load = self.params['load']
+            app.load = self.params['network_load']
             app.start_time = self.params['start_time']
             app.stop_time = self.params['stop_time']
             # todo set correct size

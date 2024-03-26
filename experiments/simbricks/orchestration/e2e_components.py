@@ -463,11 +463,12 @@ class E2EMsgGenApplication(E2EApplication):
         self.msg_size_dist_file = ""
 
     def ns3_config(self) -> str:
-        els = [f'{{{p},{i}}}' for p,i in self.cdf.items()]
-        cdf = '+'.join(els)
-        print(cdf)
+        #els = [f'{{{p},{i}}}' for p,i in self.cdf.items()]
+        #cdf = '+'.join(els)
+        #print(cdf)
+        cdf = ""
         self.mapping.update({
-            "Local": f"{self.ip}:{self.port}",
+            "Port": str(self.port),
             "RemoteClients": ','.join(self.remotes),
             "MsgSizeCDF": cdf,
             "MaxMsg": self.max_msg,
