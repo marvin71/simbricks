@@ -135,10 +135,13 @@ class E2EGlobalConfig(E2EBase):
         self.category = "Global"
         self.stop_time = ""
         self.mac_start = 0
+        self.progress = ""
 
     def ns3_config(self) -> str:
         self.mapping.update({
-            "StopTime": self.stop_time, "MACStart": str(self.mac_start)
+            "StopTime": self.stop_time,
+            "MACStart": str(self.mac_start),
+            "Progress": self.progress
         })
         return super().ns3_config()
 
@@ -677,4 +680,16 @@ class E2EPeriodicSampleProbe(E2EProbe):
             "Start": self.start,
             "Interval": self.interval
         })
+        return super().ns3_config()
+
+
+class E2ETracer(E2EProbe):
+
+    def __init__(self, idd: str, probe_type: str) -> None:
+        super().__init__(idd)
+        self.type = probe_type
+        self.file = ""
+
+    def ns3_config(self) -> str:
+        self.mapping.update({"File": self.file})
         return super().ns3_config()

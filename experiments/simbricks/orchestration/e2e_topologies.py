@@ -500,4 +500,8 @@ class HomaTopology(E2ETopology):
             # todo set correct size
             app.payload_size = str(int(self.params['mtu']) - 20 - 20)
             app.msg_size_dist_file = self.params['msg_size_dist_file']
+            if i == 0:
+                probe = e2e.E2ETracer('homa_traces', 'MsgBeginFinish')
+                probe.file = 'homa_traces.output'
+                app.add_component(probe)
             host.add_component(app)

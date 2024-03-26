@@ -72,6 +72,7 @@ for p in types_of_protocol:
     net = sim.NS3E2ENet()
     net.opt = ' '.join([f'--{o[0]}={o[1]}' for o in options.items()])
     #net.e2e_global.stop_time = '60s'
+    net.e2e_global.progress = '100ms,23s'
     net.add_component(topology)
 
     net.wait = True
