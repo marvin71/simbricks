@@ -488,24 +488,26 @@ class E2EMsgGenApplicationTCP(E2EApplication):
         super().__init__(idd)
         self.type = "MsgGeneratorTCP"
         self.port = 3000
+        self.ip = "0.0.0.0"
         self.remotes = []
         self.cdf = {0.5: 1, 1.0: 2}
         self.max_msg = 0
         self.load = 0.8
         self.avg_msg_size_pkts = 1.0
+        self.payload_size = "1400"
+        self.msg_size_dist_file = ""
 
     def ns3_config(self) -> str:
-        els = [f'{{{p},{i}}}' for p,i in self.cdf.items()]
-        cdf = '+'.join(els)
-        print(cdf)
+        cdf = ""
         self.mapping.update({
-            "Port": self.port,
+            "Port": str(self.port),
             "RemoteClients": ','.join(self.remotes),
             "MsgSizeCDF": cdf,
             "MaxMsg": self.max_msg,
             "Load": self.load,
             "AvgMsgSizePkts": self.avg_msg_size_pkts,
-
+            "PayloadSize": self.payload_size,
+            "MsgSizeDistFileName": self.msg_size_dist_file,
         })
         return super().ns3_config()
 

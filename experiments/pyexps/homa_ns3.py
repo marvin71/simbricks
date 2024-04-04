@@ -30,8 +30,7 @@ from simbricks.orchestration.e2e_topologies import (HomaTopology, add_homa_bg)
 
 random.seed(42)
 
-#types_of_protocol = ['tcp', 'homa']
-types_of_protocol = ['homa']
+types_of_protocol = ['tcp', 'homa']
 
 initial_credit = '7'
 total_prio_bands = '8'
@@ -61,6 +60,13 @@ experiments = []
 for p in types_of_protocol:
     e = exp.Experiment('homa_' + '_ns3_' + p)
 
+    if p == 'homa':
+        AppClass = e2e.E2EMsgGenApplication
+    elif p == 'tcp':
+        AppClass = e2e.E2EMsgGenApplicationTCP
+    else:
+        raise NameError(f'Unkown {p} in types_of_protocol')
+
     topology = HomaTopology(
         pfifo_num_bands=total_prio_bands,
         network_load=network_load,
@@ -79,7 +85,7 @@ for p in types_of_protocol:
     e.add_network(net)
 
     topology.add_homa_hosts()
-    topology.add_homa_app()
+    topology.add_homa_app(AppClass)
     net.init_network()
 
     experiments.append(e)

@@ -26,6 +26,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import ipaddress
 import random
+import typing as tp
 
 import simbricks.orchestration.e2e_components as e2e
 
@@ -485,12 +486,15 @@ class HomaTopology(E2ETopology):
                 self.hosts.append(host)
                 tor_sw.add_component(host)
 
-    def add_homa_app(self):
+    def add_homa_app(
+        self,
+        AppClass: tp.Type[e2e.E2EApplication] = e2e.E2EMsgGenApplication
+    ):
         addresses = []
         for (i, host) in enumerate(self.hosts):
             addresses.append(host.ip.split('/')[0] + f':{2000+i}')
         for (i, host) in enumerate(self.hosts):
-            app = e2e.E2EMsgGenApplication(f'_{self.basename}host{i}_homa_app')
+            app = AppClass(f'_{self.basename}host{i}_homa_app')
             app.ip = addresses[i].split(':')[0]
             app.port = addresses[i].split(':')[1]
             app.remotes = addresses
