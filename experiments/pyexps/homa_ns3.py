@@ -55,6 +55,7 @@ options = {
     'ns3::HomaL4Protocol::NumUnschedPrioBands': unsched_prio_bands,
     'ns3::HomaL4Protocol::InbndRtxTimeout': inbnd_rtx_timeout,
     'ns3::HomaL4Protocol::OutbndRtxTimeout': outbound_rtx_timeout,
+    'ns3::ArpCache::PendingQueueSize': 1024,
 }
 
 experiments = []
