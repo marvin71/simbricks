@@ -392,6 +392,7 @@ class HomaTopology(E2ETopology):
             'n_agg_sw': 1,
             'n_agg_racks': 9,
             'h_per_rack': 16,
+            'n_remotes': 4,
             'mtu': '1448',
             'agg_link_delay': '250ns',
             'agg_link_rate': '160Gbps',
@@ -488,7 +489,9 @@ class HomaTopology(E2ETopology):
 
     def add_homa_app(
         self,
-        AppClass: tp.Type[e2e.E2EApplication] = e2e.E2EMsgGenApplication
+        AppClass: tp.Type[tp.Union[e2e.E2EMsgGenApplication,
+                                   e2e.E2EMsgGenApplicationTCP]
+                         ] = e2e.E2EMsgGenApplication
     ):
         addresses = []
         for (i, host) in enumerate(self.hosts):
@@ -497,10 +500,22 @@ class HomaTopology(E2ETopology):
             app = AppClass(f'_{self.basename}host{i}_homa_app')
             app.ip = addresses[i].split(':')[0]
             app.port = addresses[i].split(':')[1]
-            app.remotes = addresses
             app.load = self.params['network_load']
             app.start_time = self.params['start_time']
             app.stop_time = self.params['stop_time']
+            
+            # randomly draw the remotes to send data to
+            N = self.params['n_remotes']
+            addresses_wo_self = addresses.copy()
+            addresses_wo_self.pop(i)
+            remotes = []
+            assert len(addresses_wo_self) >= N
+            for _ in range(N):
+                k = random.randrange(0, len(addresses_wo_self))
+                remotes.append(addresses_wo_self[k])
+                addresses_wo_self.pop(k)
+            app.remotes = remotes
+
             # todo set correct size
             app.payload_size = str(int(self.params['mtu']) - 20 - 20)
             app.msg_size_dist_file = self.params['msg_size_dist_file']
