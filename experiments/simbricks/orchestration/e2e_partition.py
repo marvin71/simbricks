@@ -88,7 +88,7 @@ def dot_topology(topology, partitions=None):
         dot += f'subgraph cluster{p} {{\n'
         dot += f'label = "netpart_{p}";\n'
         for n in partitions[p]:
-          dot += f'n{n.id} [label="{n.id}"];\n'
+            dot += f'n{n.id} [label="{n.id}"];\n'
         dot += '}\n'
     for l in topology.get_links():
         dot += f'n{l.left_node.id} -- n{l.right_node.id};\n'
@@ -123,31 +123,31 @@ def instantiate_partition(topology, node_partitions, sync_delay_factor=1.0):
             # make sure that connections always go in one direction, so there is
             # a topological order for dependencies when launching
             if l_p < r_p:
-              lst_p = l_p
-              lst = l.left_node
-              con_p = r_p
-              con = l.right_node
+                lst_p = l_p
+                lst = l.left_node
+                con_p = r_p
+                con = l.right_node
             else:
-              lst_p = r_p
-              lst = l.right_node
-              con_p = l_p
-              con = l.left_node
+                lst_p = r_p
+                lst = l.right_node
+                con_p = l_p
+                con = l.left_node
 
-            lst_a = comps.E2ESimbricksNetworkNicIf(
-                f'xL_{i}')
+            lst_a = comps.E2ENetworkSimbricks(f'xL_{i}')
             lst_a.eth_latency = f'{l.delay}'
             lst_a.sync_delay = stringify_duration(
                 parse_duration(l.delay) * sync_delay_factor)
             lst_a.simbricks_component = networks[con_p]
+            lst_a.listen = True
             lst.add_component(lst_a)
 
-            con_a = comps.E2ESimbricksNetworkNetIf(
-                f'xC_{i}')
+            con_a = comps.E2ENetworkSimbricks(f'xC_{i}')
             con_a.eth_latency = f'{l.delay}'
             con_a.sync_delay = stringify_duration(
                 parse_duration(l.delay) * sync_delay_factor)
             con_a.simbricks_component = networks[lst_p]
             con_a.set_peer(lst_a)
+            con_a.listen = False
             con.add_component(con_a)
 
     return list(networks.values())
@@ -244,4 +244,39 @@ def hier_partitions(topology: topos.DCFatTree):
         for r in ab['racks']:
             partitions['rs'][i] = [r['tor']]
             i += 1
+    return partitions
+
+
+def hier_partitions_homa(
+    topology: topos.HomaTopology
+) -> tp.Dict[int, tp.List[comps.E2ESwitchNode]]:
+    partitions = {}
+
+    # trivial partition: all in same partiton
+    partitions['s'] = {0: topology.get_switches()}
+
+    # one partition per rack, aggregation switches in first
+    partitions['r'] = {0: topology.agg_switches + [topology.tor_switches[0]]}
+    partitions['r'].update(
+        (i, [sw]) for i, sw in enumerate(topology.tor_switches[1:], 1)
+    )
+
+    # all aggregation switches in one partition, all tors in another
+    partitions['asrs'] = {0: topology.agg_switches, 1: topology.tor_switches}
+
+    # all aggregation switches in one partition, every tor in its own
+    partitions['asr'] = {0: topology.agg_switches}
+    partitions['asr'].update(
+        (i, [sw]) for i, sw in enumerate(topology.tor_switches, 1)
+    )
+
+    # every aggregation switch in its own partition, all tors in one
+    partitions['ars'] = dict(
+        (i, [sw]) for i, sw in enumerate(topology.agg_switches)
+    )
+    partitions['ars'][len(topology.agg_switches)] = topology.tor_switches
+
+    # all partitioned
+    partitions['ar'] = dict((i, [sw]) for i, sw in enumerate(topology.switches))
+
     return partitions

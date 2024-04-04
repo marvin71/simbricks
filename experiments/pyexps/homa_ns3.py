@@ -26,13 +26,14 @@ import simbricks.orchestration.experiments as exp
 import simbricks.orchestration.nodeconfig as node
 import simbricks.orchestration.simulators as sim
 import simbricks.orchestration.e2e_components as e2e
+from simbricks.orchestration import e2e_partition
 from simbricks.orchestration.simulator_utils import create_tcp_cong_hosts
 from simbricks.orchestration.e2e_topologies import (HomaTopology, add_homa_bg)
 
-random.seed(42)
-
 types_of_protocol = ['tcp', 'homa']
 n_remotes_per_sender = [4]
+partitions = e2e_partition.hier_partitions_homa(HomaTopology()).keys()
+sync_factors = [1.0, 0.5, 0.25, 0.1]
 
 initial_credit = '7'
 total_prio_bands = '8'
@@ -60,15 +61,16 @@ options = {
 
 experiments = []
 
-for p, N in itertools.product(types_of_protocol, n_remotes_per_sender):
-    e = exp.Experiment(f'homa_ns3_{p}_{N}')
+for proto, N, p_id, sf in itertools.product(types_of_protocol, n_remotes_per_sender, partitions, sync_factors):
+    random.seed(42) # make sure remotes are selected the same way
+    e = exp.Experiment(f'homa_ns3_{proto}_{N}_{p_id}_{sf}')
 
-    if p == 'homa':
+    if proto == 'homa':
         AppClass = e2e.E2EMsgGenApplication
-    elif p == 'tcp':
+    elif proto == 'tcp':
         AppClass = e2e.E2EMsgGenApplicationTCP
     else:
-        raise NameError(f'Unkown {p} in types_of_protocol')
+        raise NameError(f'Unkown {proto} in types_of_protocol')
 
     topology = HomaTopology(
         pfifo_num_bands=total_prio_bands,
@@ -79,17 +81,21 @@ for p, N in itertools.product(types_of_protocol, n_remotes_per_sender):
         n_remotes=N
     )
 
-    net = sim.NS3E2ENet()
-    net.opt = ' '.join([f'--{o[0]}={o[1]}' for o in options.items()])
-    #net.e2e_global.stop_time = '60s'
-    net.e2e_global.progress = '100ms,23s'
-    net.add_component(topology)
-
-    net.wait = True
-    e.add_network(net)
-
     topology.add_homa_hosts()
     topology.add_homa_app(AppClass)
-    net.init_network()
+
+    partition = e2e_partition.hier_partitions_homa(topology)[p_id]
+    nets = e2e_partition.instantiate_partition(topology, partition, sf)
+    with open(f'out/{e.name}.dot', 'w') as f:
+        dot = e2e_partition.dot_topology(topology, partition)
+        f.write(dot)
+
+    for net in nets:
+        net.opt = ' '.join([f'--{o[0]}={o[1]}' for o in options.items()])
+        #net.e2e_global.stop_time = '60s'
+        net.e2e_global.progress = '100ms,23s'
+        net.wait = True
+        e.add_network(net)
+        net.init_network()
 
     experiments.append(e)

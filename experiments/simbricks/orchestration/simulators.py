@@ -922,6 +922,17 @@ class NS3E2ENet(NetSim):
         self.e2e_ns3_logging = e2e.E2ENs3Logging()
         self.use_file = True
         self.use_dce = False
+    
+    def __str__(self):
+        repr = '<'
+        for comp in self.e2e_components:
+            repr += f'{comp.id},'
+        repr += '>'
+        return repr
+    
+    def __repr__(self) -> str:
+        return str(self)
+
 
     def add_component(
         self,

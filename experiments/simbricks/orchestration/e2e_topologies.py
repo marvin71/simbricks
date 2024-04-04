@@ -413,9 +413,9 @@ class HomaTopology(E2ETopology):
 
         self.basename = basename
 
-        self.switches = []
-        self.agg_switches = []
-        self.tor_switches = []
+        self.switches: tp.List[e2e.E2ESwitchNode] = []
+        self.agg_switches: tp.List[e2e.E2ESwitchNode] = []
+        self.tor_switches: tp.List[e2e.E2ESwitchNode] = []
 
         self.links = []
         self.agg_tor_links = []
