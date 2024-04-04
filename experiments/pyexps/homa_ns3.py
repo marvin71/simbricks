@@ -21,6 +21,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import random
+import itertools
 import simbricks.orchestration.experiments as exp
 import simbricks.orchestration.nodeconfig as node
 import simbricks.orchestration.simulators as sim
@@ -31,6 +32,7 @@ from simbricks.orchestration.e2e_topologies import (HomaTopology, add_homa_bg)
 random.seed(42)
 
 types_of_protocol = ['tcp', 'homa']
+n_remotes_per_sender = [4]
 
 initial_credit = '7'
 total_prio_bands = '8'
@@ -57,8 +59,8 @@ options = {
 
 experiments = []
 
-for p in types_of_protocol:
-    e = exp.Experiment('homa_' + '_ns3_' + p)
+for p, N in itertools.product(types_of_protocol, n_remotes_per_sender):
+    e = exp.Experiment(f'homa_ns3_{p}_{N}')
 
     if p == 'homa':
         AppClass = e2e.E2EMsgGenApplication
@@ -73,6 +75,7 @@ for p in types_of_protocol:
         start_time=start_time,
         stop_time=stop_time,
         msg_size_dist_file=msg_size_dist_file,
+        n_remotes=N
     )
 
     net = sim.NS3E2ENet()
