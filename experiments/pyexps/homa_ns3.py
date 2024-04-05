@@ -31,7 +31,7 @@ from simbricks.orchestration.simulator_utils import create_tcp_cong_hosts
 from simbricks.orchestration.e2e_topologies import (HomaTopology, add_homa_bg)
 
 types_of_protocol = ['tcp', 'homa']
-n_remotes_per_sender = [4]
+n_remotes_per_sender = [4, 8, 16]
 partitions = e2e_partition.hier_partitions_homa(HomaTopology()).keys()
 sync_factors = [1.0, 0.5, 0.25, 0.1]
 
@@ -49,6 +49,7 @@ options = {
     'ns3::TcpSocket::SegmentSize': '1448',
     'ns3::TcpSocket::SndBufSize': '524288',
     'ns3::TcpSocket::RcvBufSize': '524288',
+    'ns3::TcpSocket::ConnTimeout': '100ms',
     'ns3::Ipv4GlobalRouting::RandomEcmpRouting': '1',
     'ns3::Ipv4L3Protocol::MayFragment': 'false',
     'ns3::HomaL4Protocol::RttPackets': initial_credit,
@@ -81,6 +82,11 @@ for proto, N, p_id, sf in itertools.product(types_of_protocol, n_remotes_per_sen
         n_remotes=N
     )
 
+    # for homa, a drop tail queue of size 1p is used at the nodes, which doesn't
+    # work for tcp
+    if proto == 'tcp':
+        topology.params['tor_link_queue_size'] = '1024p'
+
     topology.add_homa_hosts()
     topology.add_homa_app(AppClass)
 
@@ -92,7 +98,7 @@ for proto, N, p_id, sf in itertools.product(types_of_protocol, n_remotes_per_sen
 
     for net in nets:
         net.opt = ' '.join([f'--{o[0]}={o[1]}' for o in options.items()])
-        #net.e2e_global.stop_time = '60s'
+        net.e2e_global.stop_time = '23s'
         net.e2e_global.progress = '100ms,23s'
         net.wait = True
         e.add_network(net)
