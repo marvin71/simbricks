@@ -476,11 +476,11 @@ class HomaTopology(E2ETopology):
                 host.data_rate = self.params['tor_link_rate']
                 host.ip = str(next(ips)) + prefix
                 host.mapping.update({
-                    'OuterQueueType': 'ns3::HomaPFifoQueue',
-                    'OuterQueue-MaxSize': '500p',
-                    'OuterQueue-NumBands': self.params['pfifo_num_bands'],
-                    'InnerQueueType': self.params['tor_link_queue_type'],
-                    'InnerQueue-MaxSize': self.params['tor_link_queue_size']
+                    'InnerQueueType': 'ns3::HomaPFifoQueue',
+                    'InnerQueue-MaxSize': '600p',
+                    'InnerQueue-NumBands': self.params['pfifo_num_bands'],
+                    'OuterQueueType': self.params['tor_link_queue_type'],
+                    'OuterQueue-MaxSize': self.params['tor_link_queue_size']
                 })
                 host.queue_type = ''
                 host.mtu = self.params['mtu']
