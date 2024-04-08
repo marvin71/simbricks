@@ -112,7 +112,7 @@ for proto, N, p_id, sf, nl in itertools.product(types_of_protocol, n_remotes_per
 
         # add probes for homa
         probe = e2e.E2ETracer('homa_traces', 'MsgBeginFinish')
-        probe.file = f'homa_trace_{nl}_{i}.tr'
+        probe.file = f'{proto}_trace_{nl}_{i}.tr'
         net.add_component(probe)
 
         net.wait = True
