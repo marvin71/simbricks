@@ -50,9 +50,9 @@ jitter = e2e.E2ENs3ConstantRandomVariable()
 jitter.constant = 0.0
 
 options = {
-    'ns3::TcpSocket::SegmentSize': '1448',
-    'ns3::TcpSocket::SndBufSize': '524288',
-    'ns3::TcpSocket::RcvBufSize': '524288',
+    'ns3::TcpSocket::SegmentSize': 1448,
+    'ns3::TcpSocket::SndBufSize': 29960000,
+    'ns3::TcpSocket::RcvBufSize': 29960000,
     'ns3::TcpSocket::ConnTimeout': '100ms',
     'ns3::Ipv4GlobalRouting::RandomEcmpRouting': '1',
     'ns3::Ipv4L3Protocol::MayFragment': 'false',
