@@ -45,6 +45,9 @@ start_time = '3s'
 stop_time = '23s'
 msg_size_dist_file = ''
 
+jitter = e2e.E2ENs3ConstantRandomVariable()
+jitter.constant = 0.0
+
 options = {
     'ns3::TcpSocket::SegmentSize': '1448',
     'ns3::TcpSocket::SndBufSize': '524288',
@@ -58,6 +61,7 @@ options = {
     'ns3::HomaL4Protocol::InbndRtxTimeout': inbnd_rtx_timeout,
     'ns3::HomaL4Protocol::OutbndRtxTimeout': outbound_rtx_timeout,
     'ns3::ArpCache::PendingQueueSize': 1024,
+    'ns3::ArpL3Protocol::RequestJitter': jitter.get_config(),
 }
 
 experiments = []
