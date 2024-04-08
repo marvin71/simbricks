@@ -34,13 +34,13 @@ types_of_protocol = ['tcp', 'homa']
 n_remotes_per_sender = [4, 8, 16]
 partitions = e2e_partition.hier_partitions_homa(HomaTopology()).keys()
 sync_factors = [1.0, 0.5, 0.25, 0.1]
+network_loads = ['0.5', '0.8']
 
 initial_credit = '7'
 total_prio_bands = '8'
 unsched_prio_bands = '2'
 inbnd_rtx_timeout = '1ms'
 outbound_rtx_timeout = '10ms'
-network_load = '0.8'
 start_time = '3s'
 stop_time = '23s'
 msg_size_dist_file = ''
@@ -66,9 +66,9 @@ options = {
 
 experiments = []
 
-for proto, N, p_id, sf in itertools.product(types_of_protocol, n_remotes_per_sender, partitions, sync_factors):
+for proto, N, p_id, sf, nl in itertools.product(types_of_protocol, n_remotes_per_sender, partitions, sync_factors, network_loads):
     random.seed(42) # make sure remotes are selected the same way
-    e = exp.Experiment(f'homa_ns3_{proto}_{N}_{p_id}_{sf}')
+    e = exp.Experiment(f'homa_ns3_{proto}_{N}_{p_id}_{sf}_{nl}')
 
     if proto == 'homa':
         AppClass = e2e.E2EMsgGenApplication
@@ -79,7 +79,7 @@ for proto, N, p_id, sf in itertools.product(types_of_protocol, n_remotes_per_sen
 
     topology = HomaTopology(
         pfifo_num_bands=total_prio_bands,
-        network_load=network_load,
+        network_load=nl,
         start_time=start_time,
         stop_time=stop_time,
         msg_size_dist_file=msg_size_dist_file,

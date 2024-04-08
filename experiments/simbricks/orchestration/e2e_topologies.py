@@ -393,7 +393,7 @@ class HomaTopology(E2ETopology):
             'n_agg_racks': 9,
             'h_per_rack': 16,
             'n_remotes': 4,
-            'mtu': '1448',
+            'mtu': '1500',
             'agg_link_delay': '250ns',
             'agg_link_rate': '160Gbps',
             'agg_link_queue_type': 'ns3::HomaPFifoQueue',
@@ -516,11 +516,10 @@ class HomaTopology(E2ETopology):
                 addresses_wo_self.pop(k)
             app.remotes = remotes
 
-            # todo set correct size
             app.payload_size = str(int(self.params['mtu']) - 20 - 20)
             app.msg_size_dist_file = self.params['msg_size_dist_file']
             if i == 0:
                 probe = e2e.E2ETracer('homa_traces', 'MsgBeginFinish')
-                probe.file = 'homa_traces.output'
+                probe.file = 'homa_trace_' + self.params['network_load'] + '.tr'
                 app.add_component(probe)
             host.add_component(app)
