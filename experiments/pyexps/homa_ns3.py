@@ -105,10 +105,16 @@ for proto, N, p_id, sf, nl in itertools.product(types_of_protocol, n_remotes_per
         dot = e2e_partition.dot_topology(topology, partition)
         f.write(dot)
 
-    for net in nets:
+    for (i, net) in enumerate(nets):
         net.opt = ' '.join([f'--{o[0]}={o[1]}' for o in options.items()])
         net.e2e_global.stop_time = global_stop
         net.e2e_global.progress = f'100ms,{global_stop}'
+
+        # add probes for homa
+        probe = e2e.E2ETracer('homa_traces', 'MsgBeginFinish')
+        probe.file = f'homa_trace_{nl}_{i}.tr'
+        net.add_component(probe)
+
         net.wait = True
         e.add_network(net)
         net.init_network()

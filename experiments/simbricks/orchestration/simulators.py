@@ -916,7 +916,8 @@ class NS3E2ENet(NetSim):
         super().__init__()
         self.first_run = True
         self.e2e_components: tp.List[tp.Union[e2e.E2ETopologyNode,
-                                              e2e.E2ETopologyChannel]] = []
+                                              e2e.E2ETopologyChannel,
+                                              e2e.E2EGlobalProbe]] = []
         self.e2e_topologies: tp.List[E2ETopology] = []
         self.e2e_global = e2e.E2EGlobalConfig()
         self.e2e_ns3_logging = e2e.E2ENs3Logging()
@@ -938,6 +939,7 @@ class NS3E2ENet(NetSim):
         self,
         component: tp.Union[e2e.E2ETopologyNode,
                             e2e.E2ETopologyChannel,
+                            e2e.E2EGlobalProbe,
                             E2ETopology]
     ):
         if isinstance(component, E2ETopology):

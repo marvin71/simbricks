@@ -685,7 +685,13 @@ class E2EPeriodicSampleProbe(E2EProbe):
         return super().ns3_config()
 
 
-class E2ETracer(E2EProbe):
+class E2EGlobalProbe(E2EComponent):
+
+    def __init__(self, idd: str) -> None:
+        super().__init__(idd)
+        self.category = "GlobalProbe"
+
+class E2ETracer(E2EGlobalProbe):
 
     def __init__(self, idd: str, probe_type: str) -> None:
         super().__init__(idd)
