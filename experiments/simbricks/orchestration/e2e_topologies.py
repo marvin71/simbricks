@@ -514,6 +514,22 @@ class HomaTopology(E2ETopology):
                 k = random.randrange(0, len(addresses_wo_self))
                 remotes.append(addresses_wo_self[k])
                 addresses_wo_self.pop(k)
+            # add ping app for all remote addresses
+            for (j, address) in enumerate(remotes):
+                ping_app = e2e.E2EApplication(f'_{self.basename}host{i}_ping_app_{j}')
+                ping_app.type = 'Generic'
+                start_time = 0.2 + 0.2 * j
+                ping_app.start_time = f'{start_time}s'
+                ping_app.stop_time = f'{N * 0.2 + 2}s'
+                ping_app.mapping.update({
+                    'TypeId': 'ns3::Ping',
+                    'Destination(Ipv4Address)': address.split(':')[0],
+                    'Size': '16',
+                    'Count': '1',
+                    'Timeout': '1s',
+                    'VerboseMode': 'Silent',
+                })
+                host.add_component(ping_app)
             app.remotes = remotes
 
             app.payload_size = str(int(self.params['mtu']) - 20 - 20)

@@ -43,6 +43,7 @@ inbnd_rtx_timeout = '1ms'
 outbound_rtx_timeout = '10ms'
 start_time = '3s'
 stop_time = '23s'
+application_runtime = 2 # in seconds
 msg_size_dist_file = ''
 
 jitter = e2e.E2ENs3ConstantRandomVariable()
@@ -77,6 +78,10 @@ for proto, N, p_id, sf, nl in itertools.product(types_of_protocol, n_remotes_per
     else:
         raise NameError(f'Unkown {proto} in types_of_protocol')
 
+    start_time = f'{N * 0.2 + 3}s'
+    stop_time = f'{N * 0.2 + 3 + application_runtime}s'
+    global_stop = f'{N * 0.2 + 3 + application_runtime + 2}s'
+
     topology = HomaTopology(
         pfifo_num_bands=total_prio_bands,
         network_load=nl,
@@ -102,8 +107,8 @@ for proto, N, p_id, sf, nl in itertools.product(types_of_protocol, n_remotes_per
 
     for net in nets:
         net.opt = ' '.join([f'--{o[0]}={o[1]}' for o in options.items()])
-        net.e2e_global.stop_time = '23s'
-        net.e2e_global.progress = '100ms,23s'
+        net.e2e_global.stop_time = global_stop
+        net.e2e_global.progress = f'100ms,{global_stop}'
         net.wait = True
         e.add_network(net)
         net.init_network()
