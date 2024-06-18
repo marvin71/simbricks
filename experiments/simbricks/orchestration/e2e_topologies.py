@@ -397,11 +397,13 @@ class HomaTopology(E2ETopology):
             'agg_link_delay': '250ns',
             'agg_link_rate': '160Gbps',
             'agg_link_queue_type': 'ns3::HomaPFifoQueue',
-            'agg_link_queue_size': '500p',
+            'agg_link_queue_size': '5000p',
             'tor_link_delay': '250ns',
             'tor_link_rate': '10Gbps',
             'tor_link_queue_type': 'ns3::DropTailQueue<Packet>',
-            'tor_link_queue_size': '1p',
+            'tor_link_queue_size': '5000p',
+            'host_link_queue_type': 'ns3::HomaPFifoQueue',
+            'host_link_queue_size': '5000p',
             'pfifo_num_bands': '8',
             'network_load': '0.8',
             'start_time': '3s',
@@ -476,8 +478,8 @@ class HomaTopology(E2ETopology):
                 host.data_rate = self.params['tor_link_rate']
                 host.ip = str(next(ips)) + prefix
                 host.mapping.update({
-                    'InnerQueueType': 'ns3::HomaPFifoQueue',
-                    'InnerQueue-MaxSize': '600p',
+                    'InnerQueueType': self.params['host_link_queue_type'],
+                    'InnerQueue-MaxSize': self.params['host_link_queue_size'],
                     'InnerQueue-NumBands': self.params['pfifo_num_bands'],
                     'OuterQueueType': self.params['tor_link_queue_type'],
                     'OuterQueue-MaxSize': self.params['tor_link_queue_size']

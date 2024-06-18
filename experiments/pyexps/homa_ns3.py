@@ -91,11 +91,6 @@ for proto, N, p_id, sf, nl in itertools.product(types_of_protocol, n_remotes_per
         n_remotes=N
     )
 
-    # for homa, a drop tail queue of size 1p is used at the nodes, which doesn't
-    # work for tcp
-    if proto == 'tcp':
-        topology.params['tor_link_queue_size'] = '1024p'
-
     topology.add_homa_hosts()
     topology.add_homa_app(AppClass)
 
