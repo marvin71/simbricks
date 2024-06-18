@@ -78,9 +78,9 @@ for proto, N, p_id, sf, nl in itertools.product(types_of_protocol, n_remotes_per
     else:
         raise NameError(f'Unkown {proto} in types_of_protocol')
 
-    start_time = f'{N * 0.2 + 3}s'
-    stop_time = f'{N * 0.2 + 3 + application_runtime}s'
-    global_stop = f'{N * 0.2 + 3 + application_runtime + 2}s'
+    start_time = f'{0.1 + N * 0.001 + 3}s'
+    stop_time = f'{0.1 + N * 0.001 + 3 + application_runtime}s'
+    global_stop = f'{0.1 + N * 0.001 + 3 + application_runtime + 2}s'
 
     topology = HomaTopology(
         pfifo_num_bands=total_prio_bands,

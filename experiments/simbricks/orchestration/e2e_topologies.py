@@ -520,9 +520,9 @@ class HomaTopology(E2ETopology):
             for (j, address) in enumerate(remotes):
                 ping_app = e2e.E2EApplication(f'_{self.basename}host{i}_ping_app_{j}')
                 ping_app.type = 'Generic'
-                start_time = 0.2 + 0.2 * j
+                start_time = 0.1 + 0.001 * j
                 ping_app.start_time = f'{start_time}s'
-                ping_app.stop_time = f'{N * 0.2 + 2}s'
+                ping_app.stop_time = f'{0.1 + N * 0.001 + 2}s'
                 ping_app.mapping.update({
                     'TypeId': 'ns3::Ping',
                     'Destination(Ipv4Address)': address.split(':')[0],
