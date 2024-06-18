@@ -102,6 +102,7 @@ for proto, N, p_id, sf, nl in itertools.product(types_of_protocol, n_remotes_per
 
     for (i, net) in enumerate(nets):
         net.opt = ' '.join([f'--{o[0]}={o[1]}' for o in options.items()])
+        net.opt = net.opt + f' --RngRun={i}'
         net.e2e_global.stop_time = global_stop
         net.e2e_global.progress = f'100ms,{global_stop}'
 
