@@ -397,13 +397,13 @@ class HomaTopology(E2ETopology):
             'agg_link_delay': '250ns',
             'agg_link_rate': '160Gbps',
             'agg_link_queue_type': 'ns3::HomaPFifoQueue',
-            'agg_link_queue_size': '5000p',
+            'agg_link_queue_size': '500000p',
             'tor_link_delay': '250ns',
             'tor_link_rate': '10Gbps',
             'tor_link_queue_type': 'ns3::DropTailQueue<Packet>',
-            'tor_link_queue_size': '5000p',
+            'tor_link_queue_size': '500000p',
             'host_link_queue_type': 'ns3::HomaPFifoQueue',
-            'host_link_queue_size': '5000p',
+            'host_link_queue_size': '500000p',
             'pfifo_num_bands': '8',
             'network_load': '0.8',
             'start_time': '3s',
@@ -493,12 +493,22 @@ class HomaTopology(E2ETopology):
         self,
         AppClass: tp.Type[tp.Union[e2e.E2EMsgGenApplication,
                                    e2e.E2EMsgGenApplicationTCP]
-                         ] = e2e.E2EMsgGenApplication
+                         ] = e2e.E2EMsgGenApplication,
+        selected_hosts: tp.List[int] = [],
+        n_remotes = None
     ):
+        if n_remotes is None:
+            n_remotes = self.params['n_remotes']
         addresses = []
-        for (i, host) in enumerate(self.hosts):
+        if selected_hosts == []:
+            hosts = self.hosts
+        else:
+            hosts = []
+            for host in selected_hosts:
+                hosts.append(self.hosts[host])
+        for (i, host) in enumerate(hosts):
             addresses.append(host.ip.split('/')[0] + f':{2000+i}')
-        for (i, host) in enumerate(self.hosts):
+        for (i, host) in enumerate(hosts):
             app = AppClass(f'_{self.basename}host{i}_homa_app')
             app.ip = addresses[i].split(':')[0]
             app.port = addresses[i].split(':')[1]
@@ -507,15 +517,11 @@ class HomaTopology(E2ETopology):
             app.stop_time = self.params['stop_time']
             
             # randomly draw the remotes to send data to
-            N = self.params['n_remotes']
+            N = n_remotes
             addresses_wo_self = addresses.copy()
             addresses_wo_self.pop(i)
-            remotes = []
             assert len(addresses_wo_self) >= N
-            for _ in range(N):
-                k = random.randrange(0, len(addresses_wo_self))
-                remotes.append(addresses_wo_self[k])
-                addresses_wo_self.pop(k)
+            remotes = random.sample(addresses_wo_self, N)
             # add ping app for all remote addresses
             for (j, address) in enumerate(remotes):
                 ping_app = e2e.E2EApplication(f'_{self.basename}host{i}_ping_app_{j}')
