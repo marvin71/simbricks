@@ -543,3 +543,9 @@ class HomaTopology(E2ETopology):
             app.payload_size = str(int(self.params['mtu']) - 20 - 20)
             app.msg_size_dist_file = self.params['msg_size_dist_file']
             host.add_component(app)
+
+    def print_ip_addresses(self, selected_hosts: tp.List[int]):
+        addresses = []
+        for host in selected_hosts:
+            addresses.append(self.hosts[host].ip.split('/')[0])
+        print(addresses)

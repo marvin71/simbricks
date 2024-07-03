@@ -73,6 +73,8 @@ options = {
 
 experiments = []
 
+random.seed(42) # make sure remotes are selected the same way
+
 foreground_hosts = random.sample(range(n_hosts), n_foreground_hosts)
 background_hosts = [host for host in range(n_hosts) if host not in foreground_hosts]
 
@@ -85,7 +87,6 @@ def GetApp(app_type: str) -> e2e.E2EApplication:
         raise NameError(f'Unkown {app_type} in types_of_protocol')
 
 for proto_fg, proto_bg, N, p_id, sf, nl in itertools.product(types_of_protocol_fg, types_of_protocol_bg, n_remotes_per_sender, partitions, sync_factors, network_loads):
-    random.seed(42) # make sure remotes are selected the same way
     e = exp.Experiment(f'homa_ns3_{proto_fg}_{proto_bg}_{N}_{p_id}_{sf}_{nl}')
 
     start_time = 0.1 + N * 0.001 + 3
@@ -105,13 +106,15 @@ for proto_fg, proto_bg, N, p_id, sf, nl in itertools.product(types_of_protocol_f
 
     topology.add_homa_hosts()
 
+    topology.print_ip_addresses(foreground_hosts)
+
     # start homa app 1s later, so that tcp sockets can connect
     if proto_fg == 'homa':
         topology.params['start_time'] = f'{start_time + 1}s'
     topology.add_homa_app(GetApp(proto_fg), foreground_hosts,
-                          n_foreground_hosts)
+                          n_foreground_hosts - 1)
     topology.params['start_time'] = f'{start_time}s'
-    if proto_fg == 'homa':
+    if proto_bg == 'homa':
         topology.params['start_time'] = f'{start_time + 1}s'
     topology.add_homa_app(GetApp(proto_bg), background_hosts, N)
 
