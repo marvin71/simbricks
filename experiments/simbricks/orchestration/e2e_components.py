@@ -304,6 +304,9 @@ class E2ENetworkSimbricks(E2ENetwork):
         self.listen: tp.Optional[bool] = None
         self.shm_path = ""
         self.sync: SimbricksSyncMode = SimbricksSyncMode.SYNC_OPTIONAL
+        self.data_rate = ""
+        self.queue_type = ""
+        self.queue_size = ""
 
         self.simbricks_component = None
 
@@ -320,6 +323,9 @@ class E2ENetworkSimbricks(E2ENetwork):
             "Listen": "true" if self.listen else "false",
             "ShmPath": self.shm_path,
             "Sync": "" if self.sync is None else f"{self.sync.value}",
+            "DataRate": self.data_rate,
+            "QueueType": self.queue_type,
+            "Queue-MaxSize": self.queue_size,
         })
         return super().ns3_config()
 
