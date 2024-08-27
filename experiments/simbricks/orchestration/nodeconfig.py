@@ -427,6 +427,34 @@ class LinuxFEMUNode(NodeConfig):
         return super().prepare_post_cp() + l
 
 
+class HomaNode(I40eLinuxNode):
+
+    def prepare_pre_cp(self) -> tp.List[str]:
+        return super().prepare_pre_cp() + [
+            'mount -t proc proc /proc',
+            'mount -t sysfs sysfs /sys',
+            # 'sysctl -w net.core.rmem_default=31457280',
+            # 'sysctl -w net.core.rmem_max=31457280',
+            # 'sysctl -w net.core.wmem_default=31457280',
+            # 'sysctl -w net.core.wmem_max=31457280',
+            # 'sysctl -w net.core.optmem_max=25165824',
+            # 'sysctl -w net.ipv4.tcp_mem="786432 1048576 26777216"',
+            # 'sysctl -w net.ipv4.tcp_rmem="8192 87380 33554432"',
+            # 'sysctl -w net.ipv4.tcp_wmem="8192 87380 33554432"',
+            # 'sysctl -w net.ipv4.tcp_congestion_control=dctcp',
+            # 'sysctl -w net.ipv4.tcp_ecn=1'
+        ]
+
+    def prepare_post_cp(self) -> tp.List[str]:
+        return super().prepare_post_cp() + [
+            'insmod homa.ko'
+        ]
+
+    # pylint: disable=consider-using-with
+    def config_files(self) -> tp.Dict[str, tp.IO]:
+        m = {'homa.ko': open('../images/homa/homa.ko', 'rb')}
+        return {**m, **super().config_files()}
+
 class HomaCluster(AppConfig):
     def __init__(self) -> None:
         super().__init__()
