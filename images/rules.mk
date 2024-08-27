@@ -23,7 +23,7 @@
 include mk/subdir_pre.mk
 
 PACKER_VERSION := 1.7.0
-KERNEL_VERSION := 5.17.7
+KERNEL_VERSION := 6.1.38
 
 BASE_IMAGE := $(d)output-base/base
 MEMCACHED_IMAGE := $(d)output-memcached/memcached
@@ -65,6 +65,9 @@ build-images: $(IMAGES) $(RAW_IMAGES) $(vmlinux) $(bz_image) $(mqnic_mod) \
 
 build-images-min: $(IMAGES_MIN) $(RAW_IMAGES_MIN) $(vmlinux) $(bz_image) \
     $(mqnic_mod) $(farmem_mod)
+
+build-images-homa: $(IMAGES_MIN) $(RAW_IMAGES_MIN) $(vmlinux) $(bz_image) \
+    $(homa_mod)
 
 # only converts existing images to raw
 convert-images-raw:
@@ -196,7 +199,7 @@ $(kheader_tar): $(kernel_dir)/vmlinux
 
 $(kernel_dir)/.config: $(kernel_pardir)/config-$(KERNEL_VERSION)
 	rm -rf $(kernel_dir)
-	wget -O - https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$(KERNEL_VERSION).tar.xz | \
+	wget -O - https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-$(KERNEL_VERSION).tar.xz | \
 	    tar xJf - -C $(kernel_pardir)
 	cd $(kernel_dir) && patch -p1 < ../linux-$(KERNEL_VERSION)-timers-gem5.patch
 	cp $< $@
@@ -212,12 +215,12 @@ $(mqnic_mod): $(vmlinux)
 # homa kernel module
 
 $(homa_dir):
-	git clone https://github.com/PlatformLab/HomaModule \
-	    -b linux_$(KERNEL_VERSION) $@
+	git clone https://github.com/PlatformLab/HomaModule $@
 
 # HOMA kernel module
 $(homa_mod): $(vmlinux) $(homa_dir)
 	$(MAKE) -C $(kernel_dir) M=$(abspath $(homa_dir)) modules
+	$(MAKE) -C $(homa_dir)/util
 	touch $@
 
 ################################################
