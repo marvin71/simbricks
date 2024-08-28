@@ -216,6 +216,7 @@ $(mqnic_mod): $(vmlinux)
 
 $(homa_dir):
 	git clone https://github.com/PlatformLab/HomaModule $@
+	cd $@ && git checkout 36201ea8adc8c5f5a8a1711f3d82b851f0927092
 
 # HOMA kernel module
 $(homa_mod): $(vmlinux) $(homa_dir)
