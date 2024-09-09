@@ -23,8 +23,12 @@
 from __future__ import annotations
 
 import io
-import tarfile
+import pathlib
+import shutil
+import subprocess
 import typing as tp
+
+from simbricks.orchestration.experiment.experiment_environment import ExpEnv
 
 
 class AppConfig():
@@ -104,6 +108,11 @@ class NodeConfig():
         self.kcmd_append = ''
         """String to be appended to kernel command line."""
 
+        self.do_extract_disk = False
+        """Whether to extract data from the secondary disk."""
+        self.size_secondary_disk = '1G'
+        """The size of the secondary disk"""
+
     def config_str(self) -> str:
         if self.sim == 'gem5':
             cp_es = [] if self.nockp else ['m5 checkpoint']
@@ -117,27 +126,33 @@ class NodeConfig():
             self.run_cmds() + self.cleanup_cmds() + exit_es
         return '\n'.join(es)
 
-    def make_tar(self, path: str) -> None:
-        with tarfile.open(path, 'w:') as tar:
-            # add main run script
-            cfg_i = tarfile.TarInfo('guest/run.sh')
-            cfg_i.mode = 0o777
-            cfg_f = self.strfile(self.config_str())
-            cfg_f.seek(0, io.SEEK_END)
-            cfg_i.size = cfg_f.tell()
-            cfg_f.seek(0, io.SEEK_SET)
-            tar.addfile(tarinfo=cfg_i, fileobj=cfg_f)
-            cfg_f.close()
+    def make_tar(self, path: str, env: ExpEnv) -> None:
+        pathlib.Path(f'{path}.d/mount/').mkdir(parents=True, exist_ok=True)
+        pathlib.Path(f'{path}.d/files/').mkdir(parents=True, exist_ok=True)
+        with open(f'{path}.d/files/run.sh', 'w') as f:
+            f.write(self.config_str())
+        for (n, src) in self.config_files().items():
+            if 'b' in src.mode:
+                mode = 'wb'
+            else:
+                mode = 'w'
+            with open(f'{path}.d/files/{n}', mode) as dest:
+                shutil.copyfileobj(src, dest)
+        subprocess.run([f'{env.utilsdir}/prepare_disk.sh',
+                        str(pathlib.Path(path).absolute()),
+                        str(pathlib.Path(env.qemu_img_path).absolute()),
+                        self.size_secondary_disk],
+                       check=True)
 
-            # add additional config files
-            for (n, f) in self.config_files().items():
-                f_i = tarfile.TarInfo('guest/' + n)
-                f_i.mode = 0o777
-                f.seek(0, io.SEEK_END)
-                f_i.size = f.tell()
-                f.seek(0, io.SEEK_SET)
-                tar.addfile(tarinfo=f_i, fileobj=f)
-                f.close()
+    def extract_disk(self, path: str, env: ExpEnv) -> None:
+        if not self.do_extract_disk:
+            return
+        ret = subprocess.run([f'{env.utilsdir}/extract_disk.sh',
+                        str(pathlib.Path(path).absolute())], check=False)
+        if ret.returncode == 0:
+            pathlib.Path(path).unlink(missing_ok=True)
+        else:
+            print('WARNING: failed to extract data from disk')
 
     def prepare_pre_cp(self) -> tp.List[str]:
         """Commands to run to prepare node before checkpointing."""

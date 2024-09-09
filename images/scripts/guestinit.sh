@@ -1,5 +1,6 @@
 #!/bin/sh
 cd /tmp
-tar xf /dev/sdb
+mkdir guest
+mount /dev/sdb guest
 cd guest
 ./run.sh

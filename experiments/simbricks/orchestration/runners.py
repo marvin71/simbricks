@@ -125,7 +125,7 @@ class ExperimentBaseRunner(ABC):
             path = self.env.cfgtar_path(host)
             if self.verbose:
                 print('preparing config tar:', path)
-            host.node_config.make_tar(path)
+            host.node_config.make_tar(path, self.env)
             executor = self.sim_executor(host)
             task = asyncio.create_task(executor.send_file(path, self.verbose))
             copies.append(task)
@@ -179,6 +179,11 @@ class ExperimentBaseRunner(ABC):
         # add all simulator components to the output
         for sim, sc in self.running:
             self.out.add_sim(sim, sc)
+
+        # extract data from disks
+        for host in self.exp.hosts:
+            path = self.env.cfgtar_path(host)
+            host.node_config.extract_disk(path, self.env)
 
         await self.after_cleanup()
         return self.out

@@ -495,7 +495,7 @@ class Gem5Host(HostSim):
             f'--checkpoint-dir={env.gem5_cpdir(self)} '
             f'--kernel={env.gem5_kernel_path} '
             f'--disk-image={env.hd_raw_path(self.node_config.disk_image)} '
-            f'--disk-image={env.cfgtar_path(self)} '
+            f'--out-disk={env.cfgtar_path(self)} '
             f'--cpu-type={cpu_type} --mem-size={self.node_config.memory}MB '
             f'--num-cpus={self.node_config.cores} '
             '--mem-type=DDR4_2400_16x4 '
