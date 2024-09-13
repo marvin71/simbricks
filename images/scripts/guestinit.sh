@@ -1,6 +1,6 @@
 #!/bin/sh
-cd /tmp
-mkdir guest
-mount /dev/sdb guest
-cd guest
+mkdir /data
+mount /dev/sdb /data
+cp -r /data/guest /tmp
+cd /tmp/guest
 ./run.sh

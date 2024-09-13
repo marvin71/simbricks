@@ -128,15 +128,11 @@ class NodeConfig():
 
     def make_tar(self, path: str, env: ExpEnv) -> None:
         pathlib.Path(f'{path}.d/mount/').mkdir(parents=True, exist_ok=True)
-        pathlib.Path(f'{path}.d/files/').mkdir(parents=True, exist_ok=True)
-        with open(f'{path}.d/files/run.sh', 'w') as f:
+        pathlib.Path(f'{path}.d/guest/').mkdir(parents=True, exist_ok=True)
+        with open(f'{path}.d/guest/run.sh', 'w') as f:
             f.write(self.config_str())
         for (n, src) in self.config_files().items():
-            if 'b' in src.mode:
-                mode = 'wb'
-            else:
-                mode = 'w'
-            with open(f'{path}.d/files/{n}', mode) as dest:
+            with open(f'{path}.d/guest/{n}', 'wb') as dest:
                 shutil.copyfileobj(src, dest)
         subprocess.run([f'{env.utilsdir}/prepare_disk.sh',
                         str(pathlib.Path(path).absolute()),
@@ -161,12 +157,13 @@ class NodeConfig():
             'export HOME=/root',
             'export LANG=en_US',
             'export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:' + \
-                '/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"'
+                '/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"',
+            'umount /data'
         ]
 
     def prepare_post_cp(self) -> tp.List[str]:
         """Commands to run to prepare node after checkpoint restore."""
-        return []
+        return ['mount /dev/sdb /data']
 
     def run_cmds(self) -> tp.List[str]:
         """Commands to run on node."""
