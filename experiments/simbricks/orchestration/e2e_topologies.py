@@ -409,6 +409,8 @@ class HomaTopology(E2ETopology):
             'start_time': '3s',
             'stop_time': '23s',
             'msg_size_dist_file': '',
+            'sbhost_eth_latency': '500ns',
+            'sbhost_sync_delay': '100ns',
         }
         for (n, v) in kwargs.items():
             self.params[n] = v
@@ -418,6 +420,7 @@ class HomaTopology(E2ETopology):
         self.switches: tp.List[e2e.E2ESwitchNode] = []
         self.agg_switches: tp.List[e2e.E2ESwitchNode] = []
         self.tor_switches: tp.List[e2e.E2ESwitchNode] = []
+        self.racks = [[] for _ in range(self.params['n_agg_racks'])]
 
         self.links = []
         self.agg_tor_links = []
@@ -466,6 +469,36 @@ class HomaTopology(E2ETopology):
     def get_switches(self):
         return self.switches
 
+    def capacity(self):
+        max_hs = self.params['n_agg_racks'] * self.params['h_per_rack']
+        return max_hs - len(self.hosts)
+
+    def racks_with_capacity(self):
+        racks = []
+        for i, r in enumerate(self.racks):
+            cap = self.params['h_per_rack'] - len(r)
+            if cap <= 0:
+                continue
+            racks.append((i, cap))
+        return racks
+
+    def add_host(self, rack: int, h):
+        r = self.racks[rack]
+        if len(r) >= self.params['h_per_rack']:
+            raise BufferError('Requested rack is full')
+        r.append(h)
+        self.hosts.append(h)
+        self.tor_switches[rack].add_component(h)
+        return len(self.hosts) - 1
+
+    def add_host_r(self, h):
+        rs = self.racks_with_capacity()
+        if not rs:
+            raise BufferError('Network is full')
+        (rack, _) = random.choice(rs)
+        self.add_host(rack, h)
+        return rack
+
     def add_homa_hosts(self, subnet='10.2.0.0/16'):
         ipn = ipaddress.ip_network(subnet)
         prefix = f'/{ipn.prefixlen}'
@@ -489,18 +522,31 @@ class HomaTopology(E2ETopology):
                 self.hosts.append(host)
                 tor_sw.add_component(host)
 
+    def wrap_simbricks_host(self, nic):
+        host = e2e.E2ESimbricksHost(f'_sbh-{len(self.hosts)}-{nic.name}')
+        host.eth_latency = self.params['sbhost_eth_latency']
+        host.sync_delay = self.params['sbhost_sync_delay']
+        host.simbricks_component = nic
+        return host
+
+    def add_simbricks_host(self, rack, nic):
+        self.add_host(rack, self.wrap_simbricks_host(nic))
+
+    def add_simbricks_host_r(self, nic):
+        return self.add_host_r(self.wrap_simbricks_host(nic))
+
     def add_homa_app(
         self,
         AppClass: tp.Type[tp.Union[e2e.E2EMsgGenApplication,
                                    e2e.E2EMsgGenApplicationTCP]
                          ] = e2e.E2EMsgGenApplication,
-        selected_hosts: tp.List[int] = [],
+        selected_hosts: tp.List[int] = None,
         n_remotes = None
     ):
         if n_remotes is None:
             n_remotes = self.params['n_remotes']
         addresses = []
-        if selected_hosts == []:
+        if selected_hosts is None:
             hosts = self.hosts
         else:
             hosts = []
@@ -549,3 +595,83 @@ class HomaTopology(E2ETopology):
         for host in selected_hosts:
             addresses.append(self.hosts[host].ip.split('/')[0])
         print(addresses)
+
+
+def add_homa_app(
+        topo: HomaTopology,
+        app_class: tp.Type[tp.Union[e2e.E2EMsgGenApplication,
+                                    e2e.E2EMsgGenApplicationTCP]
+                          ] = e2e.E2EMsgGenApplication,
+        subnet='10.2.0.0/16',
+        **kwargs
+):
+    local_params = {}
+    params = topo.params.copy()
+    params.update(local_params)
+    params.update(kwargs)
+
+    ipn = ipaddress.ip_network(subnet)
+    prefix = f'/{ipn.prefixlen}'
+    ips = ipn.hosts()
+
+    racks = topo.racks_with_capacity()
+
+    addresses = []
+    for host_id in range(len(topo.hosts), len(topo.hosts) + topo.capacity()):
+        addresses.append((host_id, str(next(ips))))
+
+    i = 0
+    for (rack, cap) in racks:
+        for _ in range(cap):
+            host_id = addresses[i][0]
+            host = e2e.E2ESimpleNs3Host(f'_rack{rack}_host{host_id}')
+            host.delay = params['tor_link_delay']
+            host.data_rate = params['tor_link_rate']
+            host.ip = addresses[i][1] + prefix
+            host.mapping.update({
+                'InnerQueueType': params['host_link_queue_type'],
+                'InnerQueue-MaxSize': params['host_link_queue_size'],
+                'InnerQueue-NumBands': params['pfifo_num_bands'],
+                'OuterQueueType': params['tor_link_queue_type'],
+                'OuterQueue-MaxSize': params['tor_link_queue_size']
+            })
+            host.queue_type = ''
+            host.mtu = params['mtu']
+
+            app = app_class(f'_host{host_id}_homa_app')
+            app.ip = addresses[i][1]
+            app.port = 2000 + host_id
+            app.load = params['network_load']
+            app.start_time = params['start_time']
+            app.stop_time = params['stop_time']
+
+            # randomly draw the remotes to send data to
+            n_remotes = params['n_remotes']
+            addresses_wo_self = addresses.copy()
+            addresses_wo_self.pop(i)
+            assert len(addresses_wo_self) >= n_remotes
+            remotes = random.sample(addresses_wo_self, n_remotes)
+            # add ping app for all remote addresses
+            for (j, ip) in remotes:
+                ping_app = e2e.E2EApplication(f'_host{host_id}_ping_app_{j}')
+                ping_app.type = 'Generic'
+                start_time = 0.1 + 0.001 * j
+                ping_app.start_time = f'{start_time}s'
+                ping_app.stop_time = f'{0.1 + n_remotes * 0.001 + 2}s'
+                ping_app.mapping.update({
+                    'TypeId': 'ns3::Ping',
+                    'Destination(Ipv4Address)': ip,
+                    'Size': '16',
+                    'Count': '1',
+                    'Timeout': '1s',
+                    'VerboseMode': 'Silent',
+                })
+                host.add_component(ping_app)
+            app.remotes = [f'{ip}:{2000 + hid}' for (hid, ip) in remotes]
+
+            app.payload_size = str(int(params['mtu']) - 20 - 20)
+            app.msg_size_dist_file = params['msg_size_dist_file']
+            host.add_component(app)
+
+            topo.add_host(rack, host)
+            i += 1
