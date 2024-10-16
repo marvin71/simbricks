@@ -445,21 +445,23 @@ class HomaNode(I40eLinuxNode):
         return super().prepare_pre_cp() + [
             'mount -t proc proc /proc',
             'mount -t sysfs sysfs /sys',
-            # 'sysctl -w net.core.rmem_default=31457280',
-            # 'sysctl -w net.core.rmem_max=31457280',
-            # 'sysctl -w net.core.wmem_default=31457280',
-            # 'sysctl -w net.core.wmem_max=31457280',
-            # 'sysctl -w net.core.optmem_max=25165824',
-            # 'sysctl -w net.ipv4.tcp_mem="786432 1048576 26777216"',
-            # 'sysctl -w net.ipv4.tcp_rmem="8192 87380 33554432"',
-            # 'sysctl -w net.ipv4.tcp_wmem="8192 87380 33554432"',
+            'sysctl -w net.core.rmem_default=31457280',
+            'sysctl -w net.core.rmem_max=31457280',
+            'sysctl -w net.core.wmem_default=31457280',
+            'sysctl -w net.core.wmem_max=31457280',
+            'sysctl -w net.core.optmem_max=25165824',
+            'sysctl -w net.ipv4.tcp_mem="786432 1048576 26777216"',
+            'sysctl -w net.ipv4.tcp_rmem="8192 87380 33554432"',
+            'sysctl -w net.ipv4.tcp_wmem="8192 87380 33554432"',
             # 'sysctl -w net.ipv4.tcp_congestion_control=dctcp',
             # 'sysctl -w net.ipv4.tcp_ecn=1'
         ]
 
     def prepare_post_cp(self) -> tp.List[str]:
         return super().prepare_post_cp() + [
-            'insmod homa.ko'
+            'insmod homa.ko',
+            'ethtool -K eth0 tso off',
+            f'ip link set dev eth0 mtu {self.mtu} up',
         ]
 
     # pylint: disable=consider-using-with

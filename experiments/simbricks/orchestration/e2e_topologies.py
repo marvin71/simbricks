@@ -453,6 +453,7 @@ class HomaTopology(E2ETopology):
                 l.data_rate = self.params['agg_link_rate']
                 l.queue_type = self.params['agg_link_queue_type']
                 l.queue_size = self.params['agg_link_queue_size']
+                l.add_queue_attr('NumBands', self.params['pfifo_num_bands'])
                 l.mtu = self.params['mtu']
                 self.links.append(l)
                 self.agg_tor_links.append(l)
